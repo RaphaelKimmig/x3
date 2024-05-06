@@ -108,6 +108,12 @@ func main() {
 		}
 	})
 
+	x3.Command("focus_previous", "Focus the previous workspace on the current screen", func(cmd *cli.Cmd) {
+		cmd.Action = func() {
+			FocusPrevious()
+		}
+	})
+
 	x3.Command("swap", "Swap visible workspaces when there is 2 screens", func(cmd *cli.Cmd) {
 		cmd.Action = func() {
 			Swap()
@@ -266,6 +272,10 @@ func (c *I3CmdChain) FocusOutput(output string) {
 	c.Add("focus output " + output)
 }
 
+func (c *I3CmdChain) BackAndForth() {
+	c.Add("workspace back_and_forth")
+}
+
 func (c *I3CmdChain) SwapWS(ws1 i3ipc.Workspace, ws2 i3ipc.Workspace) {
 	c.MoveWSToOuput(ws2.Output)
 	c.ShowWS(ws2)
@@ -360,6 +370,27 @@ func Swap() {
 		i3.chain.SwapWS(ws2, ws1)
 	}
 	i3.RunChain()
+}
+
+func FocusPrevious() {
+	i3 := Init()
+    // get current workspace
+	ws, _ := i3.CurrentWS()
+
+	log.Debugf("Current ws output : %s", ws.Output)
+
+    i3.chain.BackAndForth()
+	i3.RunChain()
+
+	i3 = Init()
+	wsAfter, _ := i3.CurrentWS()
+
+	log.Debugf("New ws output : %s", wsAfter.Output)
+
+    // if workspace now != previous workspace -> swap
+    if(wsAfter.Output != ws.Output) {
+        Swap()
+    }
 }
 
 func List() {
